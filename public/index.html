@@ -349,78 +349,66 @@
         </div>
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const apiKeyForm = document.getElementById('apiKeyForm');
-            const apiNameInput = document.getElementById('apiName');
-            const apiKeyResult = document.getElementById('apiKeyResult');
-            const apiKeyValue = document.getElementById('apiKeyValue');
-            const copyApiKeyBtn = document.getElementById('copyApiKey');
+   <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const apiKeyForm = document.getElementById('apiKeyForm');
+    const apiNameInput = document.getElementById('apiName');
+    const apiKeyResult = document.getElementById('apiKeyResult');
+    const apiKeyValue = document.getElementById('apiKeyValue');
+    const copyApiKeyBtn = document.getElementById('copyApiKey');
 
-            // Fungsi untuk menghasilkan API Key acak
-            function generateApiKey() {
-                const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-                let apiKey = '';
-                const segments = [8, 4, 4, 4, 12]; // Format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-                
-                segments.forEach((segmentLength, index) => {
-                    for (let i = 0; i < segmentLength; i++) {
-                        apiKey += charset.charAt(Math.floor(Math.random() * charset.length));
-                    }
-                    if (index < segments.length - 1) {
-                        apiKey += '-';
-                    }
-                });
-                
-                return apiKey;
+    // Kirim data ke backend saat form disubmit
+    apiKeyForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const apiName = apiNameInput.value.trim();
+        if (!apiName) return alert('Nama API Key harus diisi!');
+
+        const submitBtn = this.querySelector('.submit-btn');
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Membuat API Key...';
+        submitBtn.disabled = true;
+
+        try {
+            // Kirim ke server (index.js)
+            const response = await fetch('/generate-api-key', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ apiName })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                apiKeyValue.textContent = result.apiKey;
+                apiKeyResult.classList.add('show');
+                apiKeyResult.scrollIntoView({ behavior: 'smooth' });
+            } else {
+                alert('Gagal membuat API Key: ' + result.message);
             }
+        } catch (err) {
+            console.error(err);
+            alert('Terjadi kesalahan saat membuat API Key.');
+        }
 
-            // Form submission
-            apiKeyForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                
-                const apiName = apiNameInput.value.trim();
-                if (!apiName) return;
-                
-                // Simulasi proses pembuatan API Key
-                const submitBtn = this.querySelector('.submit-btn');
-                const originalText = submitBtn.innerHTML;
-                
-                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Membuat API Key...';
-                submitBtn.disabled = true;
-                
-                setTimeout(() => {
-                    // Generate API Key
-                    const apiKey = generateApiKey();
-                    
-                    // Tampilkan hasil
-                    apiKeyValue.textContent = apiKey;
-                    apiKeyResult.classList.add('show');
-                    
-                    // Reset form
-                    submitBtn.innerHTML = '<i class="fas fa-key"></i> Buat API Key Baru Lain';
-                    submitBtn.disabled = false;
-                    
-                    // Scroll ke hasil
-                    apiKeyResult.scrollIntoView({ behavior: 'smooth' });
-                }, 1500);
-            });
+        submitBtn.innerHTML = '<i class="fas fa-key"></i> Buat API Key Baru Lain';
+        submitBtn.disabled = false;
+    });
 
-            // Salin API Key ke clipboard
-            copyApiKeyBtn.addEventListener('click', function() {
-                const apiKey = apiKeyValue.textContent;
-                navigator.clipboard.writeText(apiKey).then(() => {
-                    const originalText = this.innerHTML;
-                    this.innerHTML = '<i class="fas fa-check"></i> Tersalin!';
-                    this.style.background = '#2ecc71';
-                    
-                    setTimeout(() => {
-                        this.innerHTML = originalText;
-                        this.style.background = '#4a69bd';
-                    }, 2000);
-                });
-            });
+    // Tombol salin
+    copyApiKeyBtn.addEventListener('click', function() {
+        const apiKey = apiKeyValue.textContent;
+        navigator.clipboard.writeText(apiKey).then(() => {
+            const originalText = this.innerHTML;
+            this.innerHTML = '<i class="fas fa-check"></i> Tersalin!';
+            this.style.background = '#2ecc71';
+            setTimeout(() => {
+                this.innerHTML = originalText;
+                this.style.background = '#4a69bd';
+            }, 2000);
         });
-    </script>
+    });
+});
+</script>
+
 </body>
 </html>
